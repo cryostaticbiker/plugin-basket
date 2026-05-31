@@ -1,0 +1,15 @@
+{
+  "name": "plugin-basket",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/react": "latest",
+    "@types/react-native": "latest",
+    "esbuild": "latest",
+    "typescript": "latest"
+  }
+}
