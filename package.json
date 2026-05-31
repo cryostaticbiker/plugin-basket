@@ -7,9 +7,12 @@
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
+    "@rollup/plugin-commonjs": "latest",
+    "@rollup/plugin-node-resolve": "latest",
     "@types/react": "latest",
     "@types/react-native": "latest",
-    "esbuild": "latest",
+    "rollup": "latest",
+    "rollup-plugin-esbuild": "latest",
     "typescript": "latest"
   }
 }
