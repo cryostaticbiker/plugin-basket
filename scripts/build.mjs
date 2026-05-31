@@ -1,9 +1,25 @@
 import { createHash } from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
-import { rollup } from "rollup";
-import commonjs from "@rollup/plugin-commonjs";
-import nodeResolve from "@rollup/plugin-node-resolve";
-import esbuild from "rollup-plugin-esbuild";
+
+async function importBuildDependencies() {
+  try {
+    const [{ rollup }, { default: commonjs }, { default: nodeResolve }, { default: esbuild }] = await Promise.all([
+      import("rollup"),
+      import("@rollup/plugin-commonjs"),
+      import("@rollup/plugin-node-resolve"),
+      import("rollup-plugin-esbuild"),
+    ]);
+
+    return { rollup, commonjs, nodeResolve, esbuild };
+  } catch (error) {
+    if (error?.code !== "ERR_MODULE_NOT_FOUND") throw error;
+
+    console.error(`\nMissing build dependency: ${error.message}\n\nRun this once before building:\n\n  npm install\n\nThen run:\n\n  npm run build\n`);
+    process.exit(1);
+  }
+}
+
+const { rollup, commonjs, nodeResolve, esbuild } = await importBuildDependencies();
 
 const plugin = "revenge-backup";
 const sourceRoot = `src/plugins/${plugin}`;

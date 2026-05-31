@@ -14,6 +14,8 @@ npm run typecheck
 npm run build
 ```
 
+If `npm run build` says it cannot find `rollup` or another build package, the dependencies have not been installed in that checkout yet. Run `npm install` from the repository root, wait for it to finish, and then run `npm run build` again.
+
 > Note: the current execution environment blocks npm registry access, so dependencies may need to be installed in a normal local environment before running `npm run build`.
 
 ## Publishing a Revenge plugin link
