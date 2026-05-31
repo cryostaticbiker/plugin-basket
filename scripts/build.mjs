@@ -1,4 +1,4 @@
-import { mkdir, copyFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { build } from "esbuild";
 
 const plugin = "revenge-backup";
@@ -20,4 +20,6 @@ await build({
   minify: false,
 });
 
-await copyFile(`${sourceRoot}/manifest.json`, `${outputRoot}/manifest.json`);
+const manifest = JSON.parse(await readFile(`${sourceRoot}/manifest.json`, "utf8"));
+manifest.main = "index.js";
+await writeFile(`${outputRoot}/manifest.json`, `${JSON.stringify(manifest, null, 2)}\n`);
