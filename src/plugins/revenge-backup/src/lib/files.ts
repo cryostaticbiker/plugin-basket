@@ -91,10 +91,6 @@ async function writeToDownloads(fileName: string, content: string) {
       const fullPath = `${root}/${fileName}`;
       return [
         {
-          label: `writeFile(${fullPath})`,
-          run: () => fileManager.writeFile(fullPath, content, "utf8"),
-        },
-        {
           label: `writeFile(absolute, ${fullPath})`,
           run: () => fileManager.writeFile("absolute", fullPath, content, "utf8"),
         },
