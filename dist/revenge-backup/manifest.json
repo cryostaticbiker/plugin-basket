@@ -1,0 +1,1 @@
+{"name":"Revenge Backup","description":"Back up installed Revenge plugin links and settings to a local file, then restore or prune them later.","authors":[{"name":"plugin-basket"}],"main":"index.js","vendetta":{"icon":"ic_download_24px"},"hash":"a327598111378e3004cdb824e1c30fb8af009e7baf4a54518fe872b20148135b"}
