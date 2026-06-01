@@ -1,5 +1,4 @@
 import { NavigationNative, ReactNative as RN } from "@vendetta/metro/common";
-import { useProxy } from "@vendetta/storage";
 import { showConfirmationAlert } from "@vendetta/ui/alerts";
 import { getAssetIDByName } from "@vendetta/ui/assets";
 import { Forms } from "@vendetta/ui/components";
@@ -8,9 +7,10 @@ import { showToast } from "@vendetta/ui/toasts";
 import { compileAndPersistBackup, ensureStorage, restartAutoCompileTimer, vstorage } from "..";
 import { AUTO_COMPILE_INTERVALS, getIntervalLabel } from "../lib/intervals";
 import BackupManagerPage from "./BackupManagerPage";
+import { arrow, rowIcon, SwitchRow } from "./ui";
 
 const { ScrollView } = RN;
-const { FormRow, FormSection, FormSwitchRow } = Forms;
+const { FormRow, FormSection } = Forms;
 
 function formatTimestamp(timestamp?: number) {
   if (!timestamp) return "Never";
@@ -19,9 +19,7 @@ function formatTimestamp(timestamp?: number) {
 
 export default function Settings() {
   ensureStorage();
-  useProxy(vstorage);
-
-  const navigation = NavigationNative.useNavigation();
+  const navigation = NavigationNative?.useNavigation?.();
   const backup = vstorage.backup;
   const settings = vstorage.settings!;
 
@@ -43,7 +41,7 @@ export default function Settings() {
   }
 
   function openManager() {
-    navigation.push("VendettaCustomPage", {
+    navigation?.push?.("VendettaCustomPage", {
       title: "Manage Plugin Backup",
       render: BackupManagerPage,
     });
@@ -65,42 +63,42 @@ export default function Settings() {
         <FormRow
           label="Compile plugins and settings"
           subLabel="Grab all installed plugin links and their settings, then save them as a JSON file."
-          leading={getAssetIDByName("FilePlusIcon")}
+          leading={rowIcon("FilePlusIcon")}
           onPress={confirmCompile}
         />
         <FormRow
           label="Manage backed-up plugins"
           subLabel="Restore or delete individual plugins from the backup file."
-          leading={getAssetIDByName("ListBulletsIcon")}
-          trailing={FormRow.Arrow}
+          leading={rowIcon("ListBulletsIcon")}
+          trailing={arrow()}
           onPress={openManager}
         />
         <FormRow
           label="Backup status"
           subLabel={`${backup?.pluginCount ?? 0} plugins • Last updated: ${formatTimestamp(backup?.updatedAt)}${vstorage.lastSavedFile ? ` • Last file: ${vstorage.lastSavedFile}` : ""}`}
-          leading={getAssetIDByName("InfoIcon")}
+          leading={rowIcon("InfoIcon")}
         />
       </FormSection>
 
       <FormSection title="Automatic Compile">
-        <FormSwitchRow
+        <SwitchRow
           label="Auto compile plugins and settings"
           subLabel="Automatically refresh the backup and save a new JSON file on a schedule."
-          leading={getAssetIDByName("ClockIcon")}
+          leading={rowIcon("ClockIcon")}
           value={settings.autoCompile}
           onValueChange={setAutoCompile}
         />
         <FormRow
           label="Current interval"
           subLabel={getIntervalLabel(settings.autoCompileIntervalMs)}
-          leading={getAssetIDByName("TimerIcon")}
+          leading={rowIcon("TimerIcon")}
         />
         {AUTO_COMPILE_INTERVALS.map(interval => (
           <FormRow
             key={interval.value}
             label={interval.label}
             subLabel={settings.autoCompileIntervalMs === interval.value ? "Selected" : "Tap to select"}
-            leading={getAssetIDByName(settings.autoCompileIntervalMs === interval.value ? "CheckIcon" : "CircleIcon")}
+            leading={rowIcon(settings.autoCompileIntervalMs === interval.value ? "CheckIcon" : "CircleIcon")}
             onPress={() => setIntervalMs(interval.value)}
           />
         ))}

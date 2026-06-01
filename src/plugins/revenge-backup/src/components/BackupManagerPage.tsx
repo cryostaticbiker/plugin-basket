@@ -1,5 +1,4 @@
 import { NavigationNative, ReactNative as RN } from "@vendetta/metro/common";
-import { useProxy } from "@vendetta/storage";
 import { showConfirmationAlert } from "@vendetta/ui/alerts";
 import { getAssetIDByName } from "@vendetta/ui/assets";
 import { Forms, General } from "@vendetta/ui/components";
@@ -8,6 +7,7 @@ import { showToast } from "@vendetta/ui/toasts";
 import { vstorage } from "..";
 import { deleteBackupPlugin, emptyBackup, restoreAllBackupPlugins, restoreBackupPlugin } from "../lib/backup";
 import type { BackupPlugin } from "../lib/types";
+import { rowIcon } from "./ui";
 
 const { ScrollView, View, Pressable, Text } = RN as any;
 const { FormRow, FormSection } = Forms;
@@ -52,7 +52,7 @@ function PluginBackupRow({ entry }: { entry: BackupPlugin }) {
     <FormRow
       label={entry.name}
       subLabel={`${authorsLabel(entry)} • ${entry.description}`}
-      leading={getAssetIDByName("ic_application_command_24px")}
+      leading={rowIcon("ic_application_command_24px")}
       trailing={
         <View style={{ flexDirection: "row", alignItems: "center" }}>
           <PluginActionButton label="Restore" onPress={restore} />
@@ -64,8 +64,7 @@ function PluginBackupRow({ entry }: { entry: BackupPlugin }) {
 }
 
 export default function BackupManagerPage() {
-  useProxy(vstorage);
-  const navigation = NavigationNative.useNavigation();
+  const navigation = NavigationNative?.useNavigation?.();
   const backup = vstorage.backup;
   const entries = Object.values(backup?.plugins ?? {}).sort((a, b) => a.name.localeCompare(b.name));
 
@@ -94,9 +93,9 @@ export default function BackupManagerPage() {
   return (
     <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 24 }}>
       <FormSection title="Backup Manager">
-        <FormRow label="Restore all plugins" leading={getAssetIDByName("DownloadIcon")} onPress={restoreAll} />
-        <FormRow label="Delete all backed-up plugins" leading={getAssetIDByName("TrashIcon")} destructive onPress={deleteAll} />
-        <FormRow label="Back" leading={getAssetIDByName("ArrowSmallLeftIcon")} onPress={() => navigation.goBack()} />
+        <FormRow label="Restore all plugins" leading={rowIcon("DownloadIcon")} onPress={restoreAll} />
+        <FormRow label="Delete all backed-up plugins" leading={rowIcon("TrashIcon")} destructive onPress={deleteAll} />
+        <FormRow label="Back" leading={rowIcon("ArrowSmallLeftIcon")} onPress={() => navigation?.goBack?.()} />
       </FormSection>
 
       <FormSection title={`Backed-up plugins (${entries.length})`}>
