@@ -57,7 +57,7 @@ export default function Settings() {
   function confirmCompile() {
     showConfirmationAlert({
       title: "Compile plugin backup?",
-      content: "This grabs every installed plugin link and its settings, updates the stored backup, and opens Android's file saver so you can download the JSON backup.",
+      content: "This grabs every installed plugin link and its settings, updates the stored backup, and downloads the JSON backup to your phone.",
       confirmText: "Compile",
       cancelText: "Cancel",
       onConfirm: compileNow,
@@ -69,7 +69,7 @@ export default function Settings() {
       <FormSection title="Backup">
         <FormRow
           label="Compile and download plugins/settings"
-          subLabel="Grab all installed plugin links/settings, then open Android's file saver for a JSON download."
+          subLabel="Grab all installed plugin links/settings, then download them as a JSON file to your phone."
           leading={rowIcon("FilePlusIcon")}
           onPress={confirmCompile}
         />

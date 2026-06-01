@@ -3,20 +3,16 @@ import { ReactNative as RN } from "@vendetta/metro/common";
 import type { BackupFile } from "./types";
 
 const FILE_PREFIX = "revenge-plugin-backup";
-const JSON_MIME_TYPE = "application/json";
 
-type TempBackupFile = {
-  fileName: string;
-  path: string;
-  uri: string;
-  encodedUri: string;
-  remove: () => unknown;
+type DownloadAttempt = {
+  label: string;
+  run: () => Promise<unknown> | unknown;
 };
 
 export type SaveBackupFileResult = {
   fileName: string;
-  exported: boolean;
-  method: "documents" | "share" | "internal";
+  downloaded: boolean;
+  method: "downloads" | "internal";
   uri?: string;
 };
 
@@ -37,101 +33,102 @@ function getFileManager() {
   return modules.DCDFileManager ?? modules.RTNFileManager ?? modules.RNFileModule;
 }
 
+function getFileManagerConstants(fileManager: any) {
+  return typeof fileManager?.getConstants === "function" ? fileManager.getConstants() : {};
+}
+
 function normalizeFileUri(path: string) {
   if (path.startsWith("file://") || path.startsWith("content://")) return path;
   return `file://${path.startsWith("/") ? "" : "/"}${path}`;
 }
 
-function encodeFileUri(uri: string) {
-  return uri.startsWith("file://") ? encodeURI(uri) : uri;
+function normalizeResultUri(result: unknown, fallbackPath: string) {
+  const path = typeof result === "string" && result ? result : fallbackPath;
+  return normalizeFileUri(path);
 }
 
-function resolveWrittenPath(fileManager: any, storageDir: "cache" | "documents", fileName: string, writtenPath: unknown) {
-  const path = String(writtenPath ?? "");
-  if (path.startsWith("/") || path.startsWith("file://") || path.startsWith("content://")) return path;
-
-  const constants = typeof fileManager?.getConstants === "function" ? fileManager.getConstants() : undefined;
-  const root = storageDir === "cache" ? constants?.CacheDirPath : constants?.DocumentsDirPath;
-  return root ? `${root}/${path || fileName}` : path || fileName;
-}
-
-async function writeBackupFile(storageDir: "cache" | "documents", fileName: string, content: string): Promise<TempBackupFile | undefined> {
-  const fileManager = getFileManager();
-  if (typeof fileManager?.writeFile !== "function") return undefined;
-
-  // Keep the path flat: several Discord/Revenge file modules do not create
-  // nested folders, and a nested path made the backup compile fail before the
-  // document saver could open.
-  const pathInStorage = fileName;
-
-  try {
-    const writtenPath = await fileManager.writeFile(storageDir, pathInStorage, content, "utf8");
-    const path = resolveWrittenPath(fileManager, storageDir, fileName, writtenPath);
-    const uri = normalizeFileUri(path);
-
-    return {
-      fileName,
-      path,
-      uri,
-      encodedUri: encodeFileUri(uri),
-      remove: () => fileManager.removeFile?.(storageDir, pathInStorage),
-    };
-  } catch (error) {
-    console.warn(`[Revenge Backup] Could not write backup file to ${storageDir}`, error);
-    return undefined;
-  }
-}
-
-async function saveWithDocuments(file: TempBackupFile) {
-  const { DocumentsNew } = getNativeModules();
-  if (typeof DocumentsNew?.saveDocuments !== "function") return false;
-
-  const attempts = [
-    () => DocumentsNew.saveDocuments({
-      sourceUris: [file.encodedUri],
-      mimeType: JSON_MIME_TYPE,
-      fileName: file.fileName,
-      copy: true,
-    }),
-    () => DocumentsNew.saveDocuments({
-      sourceUris: [file.uri],
-      mimeType: JSON_MIME_TYPE,
-      fileName: file.fileName,
-      copy: true,
-    }),
-    () => DocumentsNew.saveDocuments({
-      uris: [file.encodedUri],
-      type: JSON_MIME_TYPE,
-      name: file.fileName,
-      copy: true,
-    }),
-    () => DocumentsNew.saveDocuments([file.encodedUri], JSON_MIME_TYPE, file.fileName),
-    () => DocumentsNew.saveDocuments(file.encodedUri, JSON_MIME_TYPE, file.fileName),
-  ];
-
+async function runAttempts(attempts: DownloadAttempt[]) {
   for (const attempt of attempts) {
     try {
-      const result = await attempt();
-      if (!result?.error) return true;
+      const result = await attempt.run();
+      return { attempt: attempt.label, result };
     } catch (error) {
-      console.warn("[Revenge Backup] Document save attempt failed", error);
+      console.warn(`[Revenge Backup] Download attempt failed: ${attempt.label}`, error);
     }
   }
 
-  return false;
+  return undefined;
 }
 
-async function shareFile(file: TempBackupFile) {
-  const share = (RN as any).Share?.share;
-  if (typeof share !== "function") return false;
+async function writeToDownloads(fileName: string, content: string) {
+  const fileManager = getFileManager();
+  if (typeof fileManager?.writeFile !== "function") return undefined;
 
-  await share({
-    title: file.fileName,
-    url: file.uri,
-    message: file.uri,
-    type: JSON_MIME_TYPE,
-  });
-  return true;
+  const constants = getFileManagerConstants(fileManager);
+  const downloadRoots = [
+    constants.DownloadDirPath,
+    constants.DownloadsDirPath,
+    constants.ExternalDownloadDirPath,
+    constants.ExternalDownloadsDirPath,
+    constants.ExternalStorageDirectoryPath ? `${constants.ExternalStorageDirectoryPath}/Download` : undefined,
+    constants.ExternalStorageDirPath ? `${constants.ExternalStorageDirPath}/Download` : undefined,
+  ].filter(Boolean);
+
+  const attempts: DownloadAttempt[] = [
+    {
+      label: "writeFile(downloads)",
+      run: () => fileManager.writeFile("downloads", fileName, content, "utf8"),
+    },
+    {
+      label: "writeFile(download)",
+      run: () => fileManager.writeFile("download", fileName, content, "utf8"),
+    },
+    {
+      label: "writeFile(external/Download)",
+      run: () => fileManager.writeFile("external", `Download/${fileName}`, content, "utf8"),
+    },
+    ...downloadRoots.flatMap((root): DownloadAttempt[] => {
+      const fullPath = `${root}/${fileName}`;
+      return [
+        {
+          label: `writeFile(${fullPath})`,
+          run: () => fileManager.writeFile(fullPath, content, "utf8"),
+        },
+        {
+          label: `writeFile(absolute, ${fullPath})`,
+          run: () => fileManager.writeFile("absolute", fullPath, content, "utf8"),
+        },
+      ];
+    }),
+  ];
+
+  const successfulAttempt = await runAttempts(attempts);
+  if (!successfulAttempt) return undefined;
+
+  const fallbackPath = downloadRoots.length ? `${downloadRoots[0]}/${fileName}` : fileName;
+  return normalizeResultUri(successfulAttempt.result, fallbackPath);
+}
+
+async function writeInternalCopy(fileName: string, content: string) {
+  const fileManager = getFileManager();
+  if (typeof fileManager?.writeFile !== "function") return undefined;
+
+  const result = await runAttempts([
+    {
+      label: "writeFile(documents)",
+      run: () => fileManager.writeFile("documents", fileName, content, "utf8"),
+    },
+    {
+      label: "writeFile(cache)",
+      run: () => fileManager.writeFile("cache", fileName, content, "utf8"),
+    },
+  ]);
+
+  if (!result) return undefined;
+
+  const constants = getFileManagerConstants(fileManager);
+  const root = constants.DocumentsDirPath ?? constants.CacheDirPath;
+  return normalizeResultUri(result.result, root ? `${root}/${fileName}` : fileName);
 }
 
 export function serializeBackup(backup: BackupFile) {
@@ -141,20 +138,12 @@ export function serializeBackup(backup: BackupFile) {
 export async function saveBackupFile(backup: BackupFile): Promise<SaveBackupFileResult> {
   const fileName = filenameFor(backup);
   const content = serializeBackup(backup);
-  const tempFile = await writeBackupFile("cache", fileName, content) ?? await writeBackupFile("documents", fileName, content);
 
-  if (tempFile) {
-    if (await saveWithDocuments(tempFile)) {
-      tempFile.remove();
-      return { fileName, exported: true, method: "documents" };
-    }
+  const downloadUri = await writeToDownloads(fileName, content);
+  if (downloadUri) return { fileName, downloaded: true, method: "downloads", uri: downloadUri };
 
-    // Keep the temporary file available for the Android share target to read.
-    // The OS/cache cleaner can remove it later.
-    if (await shareFile(tempFile)) return { fileName, exported: true, method: "share", uri: tempFile.uri };
+  const internalUri = await writeInternalCopy(fileName, content);
+  if (internalUri) return { fileName, downloaded: false, method: "internal", uri: internalUri };
 
-    tempFile.remove();
-  }
-
-  return { fileName, exported: false, method: "internal" };
+  return { fileName, downloaded: false, method: "internal" };
 }

@@ -35,15 +35,15 @@ export async function compileAndPersistBackup(options: { saveFile?: boolean } = 
       vstorage.lastSavedFile = result.fileName;
 
       showToast(
-        result.exported
-          ? `Backed up ${backup.pluginCount} plugin${backup.pluginCount === 1 ? "" : "s"} and opened the file saver.`
-          : `Backed up ${backup.pluginCount} plugin${backup.pluginCount === 1 ? "" : "s"} internally; file export is unavailable on this build.`,
-        assetId(result.exported ? "CircleCheckIcon-primary" : "WarningIcon"),
+        result.downloaded
+          ? `Downloaded backup for ${backup.pluginCount} plugin${backup.pluginCount === 1 ? "" : "s"} to your phone.`
+          : `Backed up ${backup.pluginCount} plugin${backup.pluginCount === 1 ? "" : "s"}, but direct download is unavailable on this build.`,
+        assetId(result.downloaded ? "CircleCheckIcon-primary" : "WarningIcon"),
       );
     } catch (error) {
       console.error("[Revenge Backup] File export failed", error);
       showToast(
-        `Backed up ${backup.pluginCount} plugin${backup.pluginCount === 1 ? "" : "s"} in plugin storage; file download is unavailable on this build.`,
+        `Backed up ${backup.pluginCount} plugin${backup.pluginCount === 1 ? "" : "s"}, but direct download is unavailable on this build.`,
         assetId("WarningIcon"),
       );
     }
