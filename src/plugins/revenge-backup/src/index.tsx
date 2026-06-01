@@ -30,14 +30,29 @@ export async function compileAndPersistBackup(options: { saveFile?: boolean } = 
   vstorage.backup = backup;
 
   if (options.saveFile) {
-    const fileName = await saveBackupFile(backup);
-    if (fileName) vstorage.lastSavedFile = fileName;
-  }
+    try {
+      const result = await saveBackupFile(backup);
+      vstorage.lastSavedFile = result.fileName;
 
-  showToast(
-    `Backed up ${backup.pluginCount} plugin${backup.pluginCount === 1 ? "" : "s"}.`,
-    assetId("CircleCheckIcon-primary"),
-  );
+      showToast(
+        result.exported
+          ? `Backed up ${backup.pluginCount} plugin${backup.pluginCount === 1 ? "" : "s"} and opened the file saver.`
+          : `Backed up ${backup.pluginCount} plugin${backup.pluginCount === 1 ? "" : "s"} internally; file export is unavailable on this build.`,
+        assetId(result.exported ? "CircleCheckIcon-primary" : "WarningIcon"),
+      );
+    } catch (error) {
+      console.error("[Revenge Backup] File export failed", error);
+      showToast(
+        `Backed up ${backup.pluginCount} plugin${backup.pluginCount === 1 ? "" : "s"}, but could not open a file saver.`,
+        assetId("WarningIcon"),
+      );
+    }
+  } else {
+    showToast(
+      `Backed up ${backup.pluginCount} plugin${backup.pluginCount === 1 ? "" : "s"}.`,
+      assetId("CircleCheckIcon-primary"),
+    );
+  }
 
   return backup;
 }

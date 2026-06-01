@@ -21,6 +21,8 @@ export default function Settings() {
   const navigation = NavigationNative?.useNavigation?.();
   const backup = vstorage.backup;
   const settings = vstorage.settings!;
+  const [intervalDropdownOpen, setIntervalDropdownOpen] = React.useState(false);
+  const [selectedIntervalMs, setSelectedIntervalMs] = React.useState(settings.autoCompileIntervalMs);
 
   function setAutoCompile(value: boolean) {
     settings.autoCompile = value;
@@ -29,7 +31,13 @@ export default function Settings() {
 
   function setIntervalMs(value: number) {
     settings.autoCompileIntervalMs = value;
+    setSelectedIntervalMs(value);
+    setIntervalDropdownOpen(false);
     restartAutoCompileTimer();
+  }
+
+  function toggleIntervalDropdown() {
+    setIntervalDropdownOpen(open => !open);
   }
 
   function compileNow() {
@@ -49,7 +57,7 @@ export default function Settings() {
   function confirmCompile() {
     showConfirmationAlert({
       title: "Compile plugin backup?",
-      content: "This grabs every installed plugin link and its settings, updates the stored backup, and asks Revenge to save a JSON file.",
+      content: "This grabs every installed plugin link and its settings, updates the stored backup, and opens Android's file saver so you can download the JSON backup.",
       confirmText: "Compile",
       cancelText: "Cancel",
       onConfirm: compileNow,
@@ -60,8 +68,8 @@ export default function Settings() {
     <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 24 }}>
       <FormSection title="Backup">
         <FormRow
-          label="Compile plugins and settings"
-          subLabel="Grab all installed plugin links and their settings, then save them as a JSON file."
+          label="Compile and download plugins/settings"
+          subLabel="Grab all installed plugin links/settings, then open Android's file saver for a JSON download."
           leading={rowIcon("FilePlusIcon")}
           onPress={confirmCompile}
         />
@@ -88,16 +96,18 @@ export default function Settings() {
           onValueChange={setAutoCompile}
         />
         <FormRow
-          label="Current interval"
-          subLabel={getIntervalLabel(settings.autoCompileIntervalMs)}
+          label="Compile interval"
+          subLabel={`Current interval: ${getIntervalLabel(selectedIntervalMs)}`}
           leading={rowIcon("TimerIcon")}
+          trailing={arrow()}
+          onPress={toggleIntervalDropdown}
         />
-        {AUTO_COMPILE_INTERVALS.map(interval => (
+        {intervalDropdownOpen && AUTO_COMPILE_INTERVALS.map(interval => (
           <FormRow
             key={interval.value}
             label={interval.label}
-            subLabel={settings.autoCompileIntervalMs === interval.value ? "Selected" : "Tap to select"}
-            leading={rowIcon(settings.autoCompileIntervalMs === interval.value ? "CheckIcon" : "CircleIcon")}
+            subLabel={selectedIntervalMs === interval.value ? "Selected" : "Tap to select"}
+            leading={rowIcon(selectedIntervalMs === interval.value ? "CheckIcon" : "CircleIcon")}
             onPress={() => setIntervalMs(interval.value)}
           />
         ))}
