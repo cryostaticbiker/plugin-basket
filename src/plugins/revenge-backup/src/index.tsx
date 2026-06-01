@@ -43,7 +43,7 @@ export async function compileAndPersistBackup(options: { saveFile?: boolean } = 
     } catch (error) {
       console.error("[Revenge Backup] File export failed", error);
       showToast(
-        `Backed up ${backup.pluginCount} plugin${backup.pluginCount === 1 ? "" : "s"}, but could not open a file saver.`,
+        `Backed up ${backup.pluginCount} plugin${backup.pluginCount === 1 ? "" : "s"} in plugin storage; file download is unavailable on this build.`,
         assetId("WarningIcon"),
       );
     }

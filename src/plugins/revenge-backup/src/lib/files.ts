@@ -59,18 +59,27 @@ async function writeBackupFile(storageDir: "cache" | "documents", fileName: stri
   const fileManager = getFileManager();
   if (typeof fileManager?.writeFile !== "function") return undefined;
 
-  const pathInStorage = storageDir === "cache" ? `revenge-backup/${fileName}` : `RevengeBackup/${fileName}`;
-  const writtenPath = await fileManager.writeFile(storageDir, pathInStorage, content, "utf8");
-  const path = resolveWrittenPath(fileManager, storageDir, fileName, writtenPath);
-  const uri = normalizeFileUri(path);
+  // Keep the path flat: several Discord/Revenge file modules do not create
+  // nested folders, and a nested path made the backup compile fail before the
+  // document saver could open.
+  const pathInStorage = fileName;
 
-  return {
-    fileName,
-    path,
-    uri,
-    encodedUri: encodeFileUri(uri),
-    remove: () => fileManager.removeFile?.(storageDir, pathInStorage),
-  };
+  try {
+    const writtenPath = await fileManager.writeFile(storageDir, pathInStorage, content, "utf8");
+    const path = resolveWrittenPath(fileManager, storageDir, fileName, writtenPath);
+    const uri = normalizeFileUri(path);
+
+    return {
+      fileName,
+      path,
+      uri,
+      encodedUri: encodeFileUri(uri),
+      remove: () => fileManager.removeFile?.(storageDir, pathInStorage),
+    };
+  } catch (error) {
+    console.warn(`[Revenge Backup] Could not write backup file to ${storageDir}`, error);
+    return undefined;
+  }
 }
 
 async function saveWithDocuments(file: TempBackupFile) {
@@ -90,6 +99,14 @@ async function saveWithDocuments(file: TempBackupFile) {
       fileName: file.fileName,
       copy: true,
     }),
+    () => DocumentsNew.saveDocuments({
+      uris: [file.encodedUri],
+      type: JSON_MIME_TYPE,
+      name: file.fileName,
+      copy: true,
+    }),
+    () => DocumentsNew.saveDocuments([file.encodedUri], JSON_MIME_TYPE, file.fileName),
+    () => DocumentsNew.saveDocuments(file.encodedUri, JSON_MIME_TYPE, file.fileName),
   ];
 
   for (const attempt of attempts) {
@@ -124,7 +141,7 @@ export function serializeBackup(backup: BackupFile) {
 export async function saveBackupFile(backup: BackupFile): Promise<SaveBackupFileResult> {
   const fileName = filenameFor(backup);
   const content = serializeBackup(backup);
-  const tempFile = await writeBackupFile("cache", fileName, content);
+  const tempFile = await writeBackupFile("cache", fileName, content) ?? await writeBackupFile("documents", fileName, content);
 
   if (tempFile) {
     if (await saveWithDocuments(tempFile)) {
@@ -139,8 +156,5 @@ export async function saveBackupFile(backup: BackupFile): Promise<SaveBackupFile
     tempFile.remove();
   }
 
-  const internalFile = await writeBackupFile("documents", fileName, content);
-  if (internalFile) return { fileName, exported: false, method: "internal", uri: internalFile.uri };
-
-  throw new Error("No supported file save API is available in this Revenge build.");
+  return { fileName, exported: false, method: "internal" };
 }
