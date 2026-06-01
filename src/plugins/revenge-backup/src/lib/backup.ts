@@ -37,7 +37,11 @@ function readPluginDescription(plugin: any) {
 
 async function readPluginSettings(id: string) {
   try {
-    return stripVolatileSettings(await createMMKVBackend(id).get());
+    // Add timeout to prevent indefinite hangs from MMKV backend
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error("MMKV backend timeout")), 5000)
+    );
+    return stripVolatileSettings(await Promise.race([createMMKVBackend(id).get(), timeoutPromise]));
   } catch {
     return undefined;
   }

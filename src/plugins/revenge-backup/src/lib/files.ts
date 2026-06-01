@@ -50,7 +50,11 @@ function normalizeResultUri(result: unknown, fallbackPath: string) {
 async function runAttempts(attempts: DownloadAttempt[]) {
   for (const attempt of attempts) {
     try {
-      const result = await attempt.run();
+      // Add timeout to prevent indefinite hangs on file operations
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("File operation timeout")), 5000)
+      );
+      const result = await Promise.race([attempt.run(), timeoutPromise]);
       return { attempt: attempt.label, result };
     } catch (error) {
       console.warn(`[Revenge Backup] Download attempt failed: ${attempt.label}`, error);
