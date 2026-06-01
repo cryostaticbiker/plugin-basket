@@ -21,7 +21,7 @@ If `npm run build` says it cannot find `rollup` or another build package, the de
 
 ### Backup file saving
 
-Manual and automatic compiles now try Revenge/Discord document-saving APIs first, using a temporary JSON file so the Android share/save sheet receives an actual `.json` file instead of raw JSON text. If document saving is unavailable on a given Revenge build, the plugin falls back to sharing that temporary JSON file by URI; it no longer falls back to sharing the JSON body as plain text.
+Manual and automatic compiles now try Revenge/Discord document-saving APIs first, using a temporary JSON file so Android receives an actual `.json` download instead of raw JSON text. If the Android save sheet is available, choose the folder/name just like saving other downloaded files. If that API is unavailable on a given Revenge build, the plugin falls back to sharing the temporary JSON file URI, then finally keeps an internal copy so the compile itself still succeeds instead of showing a false compile failure.
 
 ### Troubleshooting configure-page crashes
 
