@@ -18,6 +18,11 @@ If `npm run build` says it cannot find `rollup` or another build package, the de
 
 > Note: the current execution environment blocks npm registry access, so dependencies may need to be installed in a normal local environment before running `npm run build`.
 
+
+### Backup file saving
+
+Manual and automatic compiles now try Revenge/Discord document-saving APIs first, using a temporary JSON file so the Android share/save sheet receives an actual `.json` file instead of raw JSON text. If document saving is unavailable on a given Revenge build, the plugin falls back to sharing that temporary JSON file by URI; it no longer falls back to sharing the JSON body as plain text.
+
 ### Troubleshooting configure-page crashes
 
 If Revenge shows `TypeError: undefined is not a function` when opening **Configure**, make sure you rebuilt and redeployed after pulling the latest changes. Older builds attempted to call form helper components that are not present on every Revenge runtime. The current build safely falls back when those helpers are missing.

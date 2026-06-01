@@ -88,6 +88,11 @@ async function writePluginSettings(entry: BackupPlugin) {
   if (rnCacheModule?.setItem) rnCacheModule.setItem(entry.id, entry.settingsJson);
 }
 
+export function isBackupPluginInstalled(entryOrId: BackupPlugin | string) {
+  const id = typeof entryOrId === "string" ? entryOrId : entryOrId.id;
+  return Boolean(plugins[id]);
+}
+
 export async function restoreBackupPlugin(entry: BackupPlugin) {
   await writePluginSettings(entry);
 
