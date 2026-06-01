@@ -4,11 +4,15 @@ import { Forms, General } from "@vendetta/ui/components";
 const { FormRow } = Forms;
 
 export function rowIcon(name: string) {
-  return <FormRow.Icon source={getAssetIDByName(name)} />;
+  const asset = getAssetIDByName(name);
+  const Icon = FormRow?.Icon;
+
+  return typeof Icon === "function" ? <Icon source={asset} /> : asset;
 }
 
 export function arrow() {
-  return typeof FormRow.Arrow === "function" ? <FormRow.Arrow /> : FormRow.Arrow;
+  const Arrow = FormRow?.Arrow;
+  return typeof Arrow === "function" ? <Arrow /> : Arrow;
 }
 
 export const SwitchRow = Forms.FormSwitchRow ?? function SwitchRowFallback(props: any) {
@@ -20,7 +24,7 @@ export const SwitchRow = Forms.FormSwitchRow ?? function SwitchRowFallback(props
       label={label}
       subLabel={subLabel}
       leading={leading}
-      trailing={Switch ? <Switch value={value} onValueChange={onValueChange} /> : undefined}
+      trailing={typeof Switch === "function" ? <Switch value={value} onValueChange={onValueChange} /> : undefined}
       onPress={() => onValueChange?.(!value)}
     />
   );
