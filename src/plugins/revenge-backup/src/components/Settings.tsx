@@ -1,13 +1,12 @@
 import { NavigationNative, ReactNative as RN } from "@vendetta/metro/common";
 import { showConfirmationAlert } from "@vendetta/ui/alerts";
-import { getAssetIDByName } from "@vendetta/ui/assets";
 import { Forms } from "@vendetta/ui/components";
 import { showToast } from "@vendetta/ui/toasts";
 
 import { compileAndPersistBackup, ensureStorage, restartAutoCompileTimer, vstorage } from "..";
 import { AUTO_COMPILE_INTERVALS, getIntervalLabel } from "../lib/intervals";
 import BackupManagerPage from "./BackupManagerPage";
-import { arrow, rowIcon, SwitchRow } from "./ui";
+import { arrow, assetId, rowIcon, SwitchRow } from "./ui";
 
 const { ScrollView } = RN;
 const { FormRow, FormSection } = Forms;
@@ -36,7 +35,7 @@ export default function Settings() {
   function compileNow() {
     compileAndPersistBackup({ saveFile: true }).catch(error => {
       console.error("[Revenge Backup] Manual compile failed", error);
-      showToast("Could not compile plugin backup.", getAssetIDByName("CircleXIcon-primary"));
+      showToast("Could not compile plugin backup.", assetId("CircleXIcon-primary"));
     });
   }
 

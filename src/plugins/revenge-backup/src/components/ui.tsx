@@ -3,10 +3,15 @@ import { Forms, General } from "@vendetta/ui/components";
 
 const { FormRow } = Forms;
 
+export function assetId(name: string) {
+  return typeof getAssetIDByName === "function" ? getAssetIDByName(name) : undefined;
+}
+
 export function rowIcon(name: string) {
-  const asset = getAssetIDByName(name);
+  const asset = assetId(name);
   const Icon = FormRow?.Icon;
 
+  if (!asset) return undefined;
   return typeof Icon === "function" ? <Icon source={asset} /> : asset;
 }
 

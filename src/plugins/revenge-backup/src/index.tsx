@@ -1,6 +1,6 @@
 import { storage } from "@vendetta/plugin";
 import { showToast } from "@vendetta/ui/toasts";
-import { getAssetIDByName } from "@vendetta/ui/assets";
+import { assetId } from "./components/ui";
 
 import SettingsComponent from "./components/Settings";
 import { compileInstalledPlugins } from "./lib/backup";
@@ -36,7 +36,7 @@ export async function compileAndPersistBackup(options: { saveFile?: boolean } = 
 
   showToast(
     `Backed up ${backup.pluginCount} plugin${backup.pluginCount === 1 ? "" : "s"}.`,
-    getAssetIDByName("CircleCheckIcon-primary"),
+    assetId("CircleCheckIcon-primary"),
   );
 
   return backup;
@@ -52,7 +52,7 @@ export function restartAutoCompileTimer() {
   autoCompileTimer = setInterval(() => {
     compileAndPersistBackup({ saveFile: true }).catch(error => {
       console.error("[Revenge Backup] Auto compile failed", error);
-      showToast("Revenge Backup auto compile failed.", getAssetIDByName("CircleXIcon-primary"));
+      showToast("Revenge Backup auto compile failed.", assetId("CircleXIcon-primary"));
     });
   }, vstorage.settings.autoCompileIntervalMs);
 }

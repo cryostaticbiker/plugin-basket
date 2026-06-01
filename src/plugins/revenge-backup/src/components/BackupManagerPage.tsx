@@ -1,13 +1,12 @@
 import { NavigationNative, ReactNative as RN } from "@vendetta/metro/common";
 import { showConfirmationAlert } from "@vendetta/ui/alerts";
-import { getAssetIDByName } from "@vendetta/ui/assets";
 import { Forms, General } from "@vendetta/ui/components";
 import { showToast } from "@vendetta/ui/toasts";
 
 import { vstorage } from "..";
 import { deleteBackupPlugin, emptyBackup, restoreAllBackupPlugins, restoreBackupPlugin } from "../lib/backup";
 import type { BackupPlugin } from "../lib/types";
-import { rowIcon } from "./ui";
+import { assetId, rowIcon } from "./ui";
 
 const { ScrollView, View, Pressable, Text } = RN as any;
 const { FormRow, FormSection } = Forms;
@@ -38,14 +37,14 @@ function PluginActionButton({ label, destructive, onPress }: { label: string; de
 function PluginBackupRow({ entry }: { entry: BackupPlugin }) {
   function restore() {
     restoreBackupPlugin(entry)
-      .then(() => showToast(`Restored ${entry.name}.`, getAssetIDByName("CircleCheckIcon-primary")))
-      .catch(() => showToast(`Could not restore ${entry.name}.`, getAssetIDByName("CircleXIcon-primary")));
+      .then(() => showToast(`Restored ${entry.name}.`, assetId("CircleCheckIcon-primary")))
+      .catch(() => showToast(`Could not restore ${entry.name}.`, assetId("CircleXIcon-primary")));
   }
 
   function remove() {
     if (!vstorage.backup) return;
     vstorage.backup = deleteBackupPlugin(vstorage.backup, entry.id);
-    showToast(`Deleted ${entry.name} from backup.`, getAssetIDByName("TrashIcon"));
+    showToast(`Deleted ${entry.name} from backup.`, assetId("TrashIcon"));
   }
 
   return (
@@ -72,8 +71,8 @@ export default function BackupManagerPage() {
     if (!backup || !entries.length) return;
 
     restoreAllBackupPlugins(backup)
-      .then(() => showToast(`Restored ${entries.length} plugins.`, getAssetIDByName("CircleCheckIcon-primary")))
-      .catch(() => showToast("Some plugins could not be restored.", getAssetIDByName("CircleXIcon-primary")));
+      .then(() => showToast(`Restored ${entries.length} plugins.`, assetId("CircleCheckIcon-primary")))
+      .catch(() => showToast("Some plugins could not be restored.", assetId("CircleXIcon-primary")));
   }
 
   function deleteAll() {
@@ -85,7 +84,7 @@ export default function BackupManagerPage() {
       confirmColor: "red",
       onConfirm: () => {
         vstorage.backup = emptyBackup();
-        showToast("Backup list wiped.", getAssetIDByName("TrashIcon"));
+        showToast("Backup list wiped.", assetId("TrashIcon"));
       },
     });
   }
