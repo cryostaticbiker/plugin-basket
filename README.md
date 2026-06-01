@@ -18,6 +18,10 @@ If `npm run build` says it cannot find `rollup` or another build package, the de
 
 > Note: the current execution environment blocks npm registry access, so dependencies may need to be installed in a normal local environment before running `npm run build`.
 
+### Troubleshooting configure-page crashes
+
+If Revenge shows `TypeError: undefined is not a function` when opening **Configure**, make sure you rebuilt and redeployed after pulling the latest changes. Older builds attempted to call form helper components that are not present on every Revenge runtime. The current build safely falls back when those helpers are missing.
+
 ## Publishing a Revenge plugin link
 
 Revenge/Vendetta plugin links point at the **hosted plugin folder**, not at this repository's TypeScript source file. The included GitHub Actions workflow builds `src/plugins/revenge-backup`, writes the compiled plugin to `dist/revenge-backup`, and deploys the contents of `dist` to the `gh-pages` branch.
