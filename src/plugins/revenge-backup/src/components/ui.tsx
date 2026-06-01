@@ -1,3 +1,4 @@
+import { React } from "@vendetta/metro/common";
 import { getAssetIDByName } from "@vendetta/ui/assets";
 import { Forms, General } from "@vendetta/ui/components";
 

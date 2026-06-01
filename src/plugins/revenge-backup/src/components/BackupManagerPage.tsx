@@ -1,4 +1,4 @@
-import { NavigationNative, ReactNative as RN } from "@vendetta/metro/common";
+import { React, NavigationNative, ReactNative as RN } from "@vendetta/metro/common";
 import { showConfirmationAlert } from "@vendetta/ui/alerts";
 import { Forms, General } from "@vendetta/ui/components";
 import { showToast } from "@vendetta/ui/toasts";

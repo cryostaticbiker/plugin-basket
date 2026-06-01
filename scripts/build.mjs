@@ -31,13 +31,15 @@ await mkdir(outputRoot, { recursive: true });
 const manifest = JSON.parse(await readFile(`${sourceRoot}/manifest.json`, "utf8"));
 const bundle = await rollup({
   input: `${sourceRoot}/${manifest.main}`,
-  external: id => id === "react" || id === "react/jsx-runtime" || id.startsWith("@vendetta"),
+  external: id => id === "react" || id.startsWith("@vendetta"),
   onwarn: () => {},
   plugins: [
     nodeResolve(),
     commonjs(),
     esbuild({
-      jsx: "automatic",
+      jsx: "transform",
+      jsxFactory: "React.createElement",
+      jsxFragment: "React.Fragment",
       minify: true,
       target: "es2020",
       loaders: {
@@ -55,7 +57,6 @@ await bundle.write({
   exports: "named",
   globals(id) {
     if (id === "react") return "window.React";
-    if (id === "react/jsx-runtime") return "window.React";
     if (id.startsWith("@vendetta")) return id.substring(1).replace(/\//g, ".");
     return id;
   },
